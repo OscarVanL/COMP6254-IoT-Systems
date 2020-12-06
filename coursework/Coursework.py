@@ -100,7 +100,7 @@ class Coursework:
             else:
                 fridge_opened_time = None
 
-            dashboard_json = {
+            dashboard_json = [{
                 "name": "KitchenLoRaIoT",
                 "datetime": time.strftime("%Y-%m-%d %H:%M:%S"),
                 "sensors": [
@@ -158,7 +158,7 @@ class Coursework:
                     }
                 ]
 
-            }
+            }]
 
             print("Publishing payload to dashboard:", json.dumps(dashboard_json))
             self.dashboard_broker.publish(topic='KitchenIoT', payload=json.dumps(dashboard_json))

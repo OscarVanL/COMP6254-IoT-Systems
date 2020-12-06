@@ -101,61 +101,61 @@ class Coursework:
                 fridge_opened_time = None
 
             dashboard_json = [{
-                "name": "KitchenLoRaIoT",
-                "datetime": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "id": "KitchenLoRaIoT",
+                #"datetime": time.strftime("%Y-%m-%d %H:%M:%S"),
                 "sensors": [
                     {
-                        "uid": "Temperature",
+                        "id": "Temperature",
                         "unit": 2,
                         "prefix": 0,
                         "type": 4,
                         "data": temperature
-                    },
-                    {
-                        "uid": "LDR",
-                        "unit": 24,
-                        "prefix": 0,
-                        "type": 11,
-                        "data": sensor_payload.ldr
-                    },
-                    {
-                        "uid": "Humidity",
-                        "unit": 20,
-                        "prefix": 0,
-                        "type": 5,
-                        "data": sensor_payload.humidity
-                    },
-                    {
-                        "uid": "PIRTriggered",
-                        "unit": 0,
-                        "prefix": 0,
-                        "type": 1,
-                        "data": PIR_triggered_time.strftime("%Y-%m-%d %H:%M:%S")
-                    },
-                    {
-                        "uid": "FridgeTriggered",
-                        "unit": 0,
-                        "prefix": 0,
-                        "type": 1,
-                        "data": fridge_opened_time.strftime("%Y-%m-%d %H:%M:%S")
-                    },
-                    {
-                        "uid": "SignalStrength",
-                        "unit": 22,
-                        "prefix": 0,
-                        "type": 17,
-                        "data": {
-                            "rssi": rssi,
-                            "snr": snr
-                        }
-                    },
-                    {
-                        "uid": "DataRate",
-                        "unit": 0,
-                        "prefix": 0,
-                        "type": 1,
-                        "data": data_rate
-                    }
+                    }#,
+                    # {
+                    #     "id": "LDR",
+                    #     # "unit": 24,
+                    #     # "prefix": 0,
+                    #     # "type": 11,
+                    #     "data": sensor_payload.ldr
+                    # },
+                    # {
+                    #     "id": "Humidity",
+                    #     # "unit": 20,
+                    #     # "prefix": 0,
+                    #     # "type": 5,
+                    #     "data": sensor_payload.humidity
+                    # },
+                    # {
+                    #     "id": "PIRTriggered",
+                    #     # "unit": 0,
+                    #     # "prefix": 0,
+                    #     # "type": 1,
+                    #     "data": PIR_triggered_time.strftime("%Y-%m-%d %H:%M:%S")
+                    # },
+                    # {
+                    #     "id": "FridgeTriggered",
+                    #     # "unit": 0,
+                    #     # "prefix": 0,
+                    #     # "type": 1,
+                    #     "data": fridge_opened_time.strftime("%Y-%m-%d %H:%M:%S")
+                    # },
+                    # {
+                    #     "id": "SignalStrength",
+                    #     # "unit": 22,
+                    #     # "prefix": 0,
+                    #     # "type": 17,
+                    #     "data": {
+                    #         "rssi": rssi,
+                    #         "snr": snr
+                    #     }
+                    # },
+                    # {
+                    #     "id": "DataRate",
+                    #     # "unit": 0,
+                    #     # "prefix": 0,
+                    #     # "type": 1,
+                    #     "data": data_rate
+                    # }
                 ]
 
             }]

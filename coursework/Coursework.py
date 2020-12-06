@@ -61,6 +61,11 @@ class Coursework:
         print('topic:', message.topic)
         print('message:', message.payload)
         payload_dict = json.loads(message.payload)
+        rssi = payload_dict['metadata']['gateways'][0]['rssi']
+        snr = payload_dict['metadata']['gateways'][0]['snr']
+        data_rate = payload_dict['metadata']['data_rate']
+        print('Signal RSSI:', rssi)
+        print('Signal SNR:', snr)
         print(payload_dict)
 
         if payload_dict['port'] == 3:
@@ -96,31 +101,60 @@ class Coursework:
                 fridge_opened_time = None
 
             dashboard_json = {
-                "id": "KitchenLoRaIoT",
+                "ip": "KitchenLoRaIoT",
+                "datetime": str(time),
                 "sensors": [
                     {
-                        'id': 'Time',
-                        'data': str(time)
-                    },
-                    {
-                        'id': 'Temperature',
+                        'uid': 'Temperature',
+                        'unit': 2,
+                        'prefix': 0,
+                        'type': 4,
                         'data': temperature
                     },
                     {
-                        'id': 'LDR',
+                        'uid': 'LDR',
+                        'unit': 24,
+                        'prefix': 0,
+                        'type': 11,
                         'data': sensor_payload.ldr
                     },
                     {
-                        'id': 'Humidity',
+                        'uid': 'Humidity',
+                        'unit': 20,
+                        'prefix': 0,
+                        'type': 5,
                         'data': sensor_payload.humidity
                     },
                     {
-                        'id': 'PIR_Triggered',
+                        'uid': 'PIR_Triggered',
+                        'unit': 0,
+                        'prefix': 0,
+                        'type': 1,
                         'data': str(PIR_triggered_time)
                     },
                     {
-                        'id': 'Fridge_Triggered',
+                        'uid': 'Fridge_Triggered',
+                        'unit': 0,
+                        'prefix': 0,
+                        'type': 1,
                         'data': str(fridge_opened_time)
+                    },
+                    {
+                        'uid': 'Signal_Strength',
+                        'unit': 22,
+                        'prefix': 0,
+                        'type': 17,
+                        'data': {
+                            'rssi': rssi,
+                            'snr': snr
+                        }
+                    },
+                    {
+                        'uid': 'Data_Rate',
+                        'unit': 0,
+                        'prefix': 0,
+                        'type': 1,
+                        'data': data_rate
                     }
                 ]
 

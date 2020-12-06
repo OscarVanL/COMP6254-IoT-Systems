@@ -4,6 +4,7 @@ import time
 import uuid
 import yaml
 import datetime
+import os
 from dateutil import parser
 
 from paho.mqtt.client import Client
@@ -15,7 +16,7 @@ class Coursework:
 
     def __init__(self):
 
-        with open(r'CW_Mqtt_Secrets.yaml') as configuration:
+        with open(os.path.join('coursework', r'CW_Mqtt_Secrets.yaml')) as configuration:
             config = yaml.load(configuration, Loader=yaml.FullLoader)
             print(config)
 

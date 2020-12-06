@@ -2,12 +2,13 @@ from paho.mqtt.client import Client
 import uuid
 import json
 import yaml
+import os
 import base64
 
 
 class Lab2:
     def __init__(self):
-        with open(r'Lab2_Mqtt_Secrets.yaml') as configuration:
+        with open(os.path.join('labs', r'Lab2_Mqtt_Secrets.yaml')) as configuration:
             config = yaml.load(configuration, Loader=yaml.FullLoader)
             print(config)
 

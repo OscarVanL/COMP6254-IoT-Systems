@@ -77,6 +77,8 @@ class Coursework:
             sensor_payload = SensorPayload_pb2.SensorPayload()
             sensor_payload.ParseFromString(payload_hex)
 
+            # Convert "SF12BW125" into "12125".
+            data_rate = filter(str.isdigit, data_rate)
             temperature = sensor_payload.temperature / 100
             print("Temperature: " + str(temperature) + "C")
             print("LDR Value: " + str(sensor_payload.ldr))
@@ -136,18 +138,11 @@ class Coursework:
                         }
                     },
                     {
-                        "id": "PIRTriggered",
+                        "id": "DataRate",
                         "unit": 0,
                         "prefix": 0,
                         "type": 1,
-                        "data": PIR_triggered_time.strftime("%Y-%m-%d %H:%M:%S")
-                    },
-                    {
-                        "id": "FridgeTriggered",
-                        "unit": 0,
-                        "prefix": 0,
-                        "type": 1,
-                        "data": fridge_opened_time.strftime("%Y-%m-%d %H:%M:%S")
+                        "data": data_rate
                     }
                 ]
 
@@ -165,20 +160,6 @@ class Coursework:
             }]
 
             fridge_json = [{
-                "id": "KitchenLoRaIoT",
-                "datetime": fridge_opened_time.strftime("%Y-%m-%d %H:%M:%S"),
-                "sensors": [
-                    {
-                        "id": "DataRate",
-                        "unit": 0,
-                        "prefix": 0,
-                        "type": 1,
-                        "data": data_rate
-                    }
-                ]
-            }]
-
-            data_rate_json = [{
                 "id": "KitchenLoRaIoT",
                 "datetime": fridge_opened_time.strftime("%Y-%m-%d %H:%M:%S"),
                 "sensors": [

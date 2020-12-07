@@ -102,7 +102,7 @@ class Coursework:
 
             dashboard_json = [{
                 "id": "KitchenLoRaIoT",
-                # "datetime": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "datetime": time.strftime("%Y-%m-%d %H:%M:%S"),
                 "sensors": [
                     {
                         "id": "Temperature",
@@ -124,38 +124,39 @@ class Coursework:
                         "prefix": 0,
                         "type": 5,
                         "data": sensor_payload.humidity
-                    },
-                    {
-                        "id": "PIRTriggered",
-                        "unit": 0,
-                        "prefix": 0,
-                        "type": 1,
-                        "data": PIR_triggered_time.strftime("%Y-%m-%d %H:%M:%S")
-                    },
-                    {
-                        "id": "FridgeTriggered",
-                        "unit": 0,
-                        "prefix": 0,
-                        "type": 1,
-                        "data": fridge_opened_time.strftime("%Y-%m-%d %H:%M:%S")
-                    },
-                    {
-                        "id": "SignalStrength",
-                        "unit": 22,
-                        "prefix": 0,
-                        "type": 17,
-                        "data": {
-                            "rssi": rssi,
-                            "snr": snr
-                        }
-                    },
-                    {
-                        "id": "DataRate",
-                        "unit": 0,
-                        "prefix": 0,
-                        "type": 1,
-                        "data": data_rate
                     }
+                    # },
+                    # {
+                    #     "id": "PIRTriggered",
+                    #     "unit": 0,
+                    #     "prefix": 0,
+                    #     "type": 1,
+                    #     "data": PIR_triggered_time.strftime("%Y-%m-%d %H:%M:%S")
+                    # },
+                    # {
+                    #     "id": "FridgeTriggered",
+                    #     "unit": 0,
+                    #     "prefix": 0,
+                    #     "type": 1,
+                    #     "data": fridge_opened_time.strftime("%Y-%m-%d %H:%M:%S")
+                    # },
+                    # {
+                    #     "id": "SignalStrength",
+                    #     "unit": 22,
+                    #     "prefix": 0,
+                    #     "type": 17,
+                    #     "data": {
+                    #         "rssi": rssi,
+                    #         "snr": snr
+                    #     }
+                    # },
+                    # {
+                    #     "id": "DataRate",
+                    #     "unit": 0,
+                    #     "prefix": 0,
+                    #     "type": 1,
+                    #     "data": data_rate
+                    # }
                 ]
 
             }]

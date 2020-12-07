@@ -126,6 +126,16 @@ class Coursework:
                         "data": sensor_payload.humidity
                     },
                     {
+                        "id": "SignalStrength",
+                        "unit": 22,
+                        "prefix": 0,
+                        "type": 17,
+                        "data": {
+                            "rssi": rssi,
+                            "snr": snr
+                        }
+                    },
+                    {
                         "id": "PIRTriggered",
                         "unit": 0,
                         "prefix": 0,
@@ -138,27 +148,50 @@ class Coursework:
                         "prefix": 0,
                         "type": 1,
                         "data": fridge_opened_time.strftime("%Y-%m-%d %H:%M:%S")
-                    }#,
-                    # {
-                    #     "id": "SignalStrength",
-                    #     "unit": 22,
-                    #     "prefix": 0,
-                    #     "type": 17,
-                    #     "data": {
-                    #         "rssi": rssi,
-                    #         "snr": snr
-                    #     }
-                    # },
-                    # {
-                    #     "id": "DataRate",
-                    #     "unit": 0,
-                    #     "prefix": 0,
-                    #     "type": 1,
-                    #     "data": data_rate
-                    # }
+                    }
                 ]
 
             }]
 
+            pir_json = [{
+                "id": "KitchenLoRaIoT",
+                "datetime": PIR_triggered_time.strftime("%Y-%m-%d %H:%M:%S"),
+                "sensors": [
+                    {
+                        "id": "PIRTriggered",
+                        "data": 100
+                    }
+                ]
+            }]
+
+            fridge_json = [{
+                "id": "KitchenLoRaIoT",
+                "datetime": fridge_opened_time.strftime("%Y-%m-%d %H:%M:%S"),
+                "sensors": [
+                    {
+                        "id": "DataRate",
+                        "unit": 0,
+                        "prefix": 0,
+                        "type": 1,
+                        "data": data_rate
+                    }
+                ]
+            }]
+
+            data_rate_json = [{
+                "id": "KitchenLoRaIoT",
+                "datetime": fridge_opened_time.strftime("%Y-%m-%d %H:%M:%S"),
+                "sensors": [
+                    {
+                        "id": "FridgeTriggered",
+                        "data": 100
+                    }
+                ]
+            }]
+
             print("Publishing payload to dashboard:", json.dumps(dashboard_json))
             self.dashboard_broker.publish(topic='KitchenIoT', payload=json.dumps(dashboard_json))
+            print("Publishing pir trigger to dashboard:", json.dumps(pir_json))
+            self.dashboard_broker.publish(topic='KitchenIoT', payload=json.dumps(pir_json))
+            print("Publishing fridge trigger to dashboard:", json.dumps(fridge_json))
+            self.dashboard_broker.publish(topic='KitchenIoT', payload=json.dumps(fridge_json))

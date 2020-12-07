@@ -78,7 +78,7 @@ class Coursework:
             sensor_payload.ParseFromString(payload_hex)
 
             # Convert "SF12BW125" into "12125".
-            data_rate = filter(str.isdigit, data_rate)
+            data_rate = ''.join(filter(str.isdigit, data_rate))
             temperature = sensor_payload.temperature / 100
             print("Temperature: " + str(temperature) + "C")
             print("LDR Value: " + str(sensor_payload.ldr))

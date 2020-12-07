@@ -139,9 +139,6 @@ class Coursework:
                     },
                     {
                         "id": "DataRate",
-                        "unit": 0,
-                        "prefix": 0,
-                        "type": 1,
                         "data": data_rate
                     }
                 ]

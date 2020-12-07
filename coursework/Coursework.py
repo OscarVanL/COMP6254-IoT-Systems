@@ -102,7 +102,7 @@ class Coursework:
 
             dashboard_json = [{
                 "id": "KitchenLoRaIoT",
-                "datetime": time.strftime("%Y-%m-%d %H:%M:%S"),
+                # "datetime": time.strftime("%Y-%m-%d %H:%M:%S"),
                 "sensors": [
                     {
                         "id": "Temperature",

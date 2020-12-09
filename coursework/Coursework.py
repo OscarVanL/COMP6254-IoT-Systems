@@ -5,17 +5,15 @@ import uuid
 import yaml
 import datetime
 import os
+import csv
 from dateutil import parser
-
 from paho.mqtt.client import Client
-
 from pb import SensorPayload_pb2
 
 
 class Coursework:
 
     def __init__(self):
-
         with open(os.path.join('coursework', r'CW_Mqtt_Secrets.yaml')) as configuration:
             config = yaml.load(configuration, Loader=yaml.FullLoader)
             print(config)
@@ -23,7 +21,8 @@ class Coursework:
         self.mqtt_clients = []
 
         self.dashboard_broker = Client(client_id=config['DASHBOARD_MQTT_CLIENT_ID'], clean_session=True)
-        self.dashboard_broker.username_pw_set(username=config['DASHBOARD_MQTT_USER'], password=config['DASHBOARD_MQTT_PASS'])
+        self.dashboard_broker.username_pw_set(username=config['DASHBOARD_MQTT_USER'],
+                                              password=config['DASHBOARD_MQTT_PASS'])
         self.dashboard_broker.connect(host=config['DASHBOARD_MQTT_BROKER'], port=config['DASHBOARD_MQTT_PORT'])
         self.dashboard_broker.on_publish = self.on_publish
 
@@ -57,119 +56,183 @@ class Coursework:
 
     def on_message(self, client, userdata, message):
         print('----------------')
-        print('Message received at:', datetime.datetime.now())
+        received_time = datetime.datetime.now()
+        print('Message received at:', received_time)
         print('topic:', message.topic)
         print('message:', message.payload)
+        payload = KitchenSensorPayload(message, received_time)
+
+        print('Metadata:')
+        print('     Payload sent:', payload.time)
+        print('     RSSI:', payload.rssi)
+        print('     SNR:', payload.snr)
+        print('     Data rate:', payload.data_rate)
+        print('Sensor data:')
+        print('     Temperature:', payload.temperature)
+        print('     Humidity:', payload.humidity)
+        print('     LDR:', payload.ldr)
+        print('     PIR last triggered:', payload.PIR_triggered_time)
+        print('     Fridge last opened:', payload.fridge_opened_time)
+
+        dashboard_json = [{
+            "id": "KitchenLoRaIoT",
+            "datetime": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "sensors": [
+                {
+                    "id": "Temperature",
+                    "unit": 2,
+                    "prefix": 0,
+                    "type": 4,
+                    "data": payload.temperature
+                },
+                {
+                    "id": "LDR",
+                    "unit": 24,
+                    "prefix": 0,
+                    "type": 11,
+                    "data": payload.ldr
+                },
+                {
+                    "id": "Humidity",
+                    "unit": 20,
+                    "prefix": 0,
+                    "type": 5,
+                    "data": payload.humidity
+                },
+                {
+                    "id": "SignalStrength",
+                    "unit": 22,
+                    "prefix": 0,
+                    "type": 17,
+                    "data": {
+                        "rssi": payload.rssi,
+                        "snr": payload.snr
+                    }
+                },
+                {
+                    "id": "DataRate",
+                    "data": payload.data_rate
+                }
+            ]
+
+        }]
+
+        pir_json = [{
+            "id": "KitchenLoRaIoT",
+            "datetime": payload.PIR_triggered_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "sensors": [
+                {
+                    "id": "PIRTriggered",
+                    "data": 100
+                }
+            ]
+        }]
+
+        fridge_json = [{
+            "id": "KitchenLoRaIoT",
+            "datetime": payload.fridge_opened_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "sensors": [
+                {
+                    "id": "FridgeTriggered",
+                    "data": 100
+                }
+            ]
+        }]
+
+        print("Publishing payload to dashboard:", json.dumps(dashboard_json))
+        self.dashboard_broker.publish(topic='KitchenIoT', payload=json.dumps(dashboard_json))
+        print("Publishing pir trigger to dashboard:", json.dumps(pir_json))
+        self.dashboard_broker.publish(topic='KitchenIoT', payload=json.dumps(pir_json))
+        print("Publishing fridge trigger to dashboard:", json.dumps(fridge_json))
+        self.dashboard_broker.publish(topic='KitchenIoT', payload=json.dumps(fridge_json))
+        print("Logging to CSV")
+        log_to_csv(payload)
+
+
+class KitchenSensorPayload:
+
+    def __init__(self, message, received_time):
         payload_dict = json.loads(message.payload)
-        rssi = payload_dict['metadata']['gateways'][0]['rssi']
-        snr = payload_dict['metadata']['gateways'][0]['snr']
-        data_rate = payload_dict['metadata']['data_rate']
-        print('Signal RSSI:', rssi)
-        print('Signal SNR:', snr)
-        print(payload_dict)
+        self.received_time = received_time
+        # Get metadata
+        self.time = parser.parse(payload_dict['metadata']['time'])
+        self.rssi = payload_dict['metadata']['gateways'][0]['rssi']
+        self.snr = payload_dict['metadata']['gateways'][0]['snr']
+        self.data_rate_raw = payload_dict['metadata']['data_rate']
+        self.data_rate = ''.join(filter(str.isdigit, self.data_rate_raw))
 
         if payload_dict['port'] == 3:
-            # Port 3 is for our sensor data payload
-            print("Payload raw:", payload_dict['payload_raw'])
+            # Decode protocol buffer payload
             payload_hex = base64.b64decode(payload_dict['payload_raw'])
-            print("Payload hex:", base64.b64decode(payload_dict['payload_raw']))
-            print("Decoded payload:")
             sensor_payload = SensorPayload_pb2.SensorPayload()
             sensor_payload.ParseFromString(payload_hex)
 
-            # Convert "SF12BW125" into "12125".
-            data_rate = ''.join(filter(str.isdigit, data_rate))
-            temperature = sensor_payload.temperature / 100
-            print("Temperature: " + str(temperature) + "C")
-            print("LDR Value: " + str(sensor_payload.ldr))
-            print("Humidity: " + str(sensor_payload.humidity) + "%")
+            # Prepare sensor data
+            self.temperature = sensor_payload.temperature / 100
+            self.humidity = sensor_payload.humidity
+            self.ldr = sensor_payload.ldr
+
             payload_fields = set([field.name for field in sensor_payload._fields])
-
-            # Convert the ISO 8601 datetime from TTN into python datetime
-            time = parser.parse(payload_dict['metadata']['time'])
-
             if 'sec_since_pir' in payload_fields:
                 print(str(sensor_payload.sec_since_pir) + " seconds since last PIR activity")
-                PIR_triggered_time = time - datetime.timedelta(seconds=sensor_payload.sec_since_pir)
-                print("So, the PIR was triggered at:", PIR_triggered_time)
+                self.sec_since_pir = sensor_payload.sec_since_pir
+                self.PIR_triggered_time = self.time - datetime.timedelta(seconds=sensor_payload.sec_since_pir)
+                print("So, the PIR was triggered at:", self.PIR_triggered_time)
             else:
-                PIR_triggered_time = None
+                self.PIR_triggered_time = None
 
             if 'sec_since_fridge' in payload_fields:
                 print(str(sensor_payload.sec_since_fridge) + " seconds since the fridge was opened")
-                fridge_opened_time = time - datetime.timedelta(seconds=sensor_payload.sec_since_fridge)
-                print("So, the fridge was opened at:", fridge_opened_time)
+                self.sec_since_fridge = sensor_payload.sec_since_fridge
+                self.fridge_opened_time = self.time - datetime.timedelta(seconds=sensor_payload.sec_since_fridge)
+                print("So, the fridge was opened at:", self.fridge_opened_time)
             else:
-                fridge_opened_time = None
+                self.fridge_opened_time = None
+        else:
+            raise ValueError("KitchenSensorPayload initialised with incorrect payload type (expected port: 3)")
 
-            dashboard_json = [{
-                "id": "KitchenLoRaIoT",
-                "datetime": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "sensors": [
-                    {
-                        "id": "Temperature",
-                        "unit": 2,
-                        "prefix": 0,
-                        "type": 4,
-                        "data": temperature
-                    },
-                    {
-                        "id": "LDR",
-                        "unit": 24,
-                        "prefix": 0,
-                        "type": 11,
-                        "data": sensor_payload.ldr
-                    },
-                    {
-                        "id": "Humidity",
-                        "unit": 20,
-                        "prefix": 0,
-                        "type": 5,
-                        "data": sensor_payload.humidity
-                    },
-                    {
-                        "id": "SignalStrength",
-                        "unit": 22,
-                        "prefix": 0,
-                        "type": 17,
-                        "data": {
-                            "rssi": rssi,
-                            "snr": snr
-                        }
-                    },
-                    {
-                        "id": "DataRate",
-                        "data": data_rate
-                    }
-                ]
 
-            }]
+output_file = os.path.join(os.getcwd(), 'sensor_data.csv')
 
-            pir_json = [{
-                "id": "KitchenLoRaIoT",
-                "datetime": PIR_triggered_time.strftime("%Y-%m-%d %H:%M:%S"),
-                "sensors": [
-                    {
-                        "id": "PIRTriggered",
-                        "data": 100
-                    }
-                ]
-            }]
 
-            fridge_json = [{
-                "id": "KitchenLoRaIoT",
-                "datetime": fridge_opened_time.strftime("%Y-%m-%d %H:%M:%S"),
-                "sensors": [
-                    {
-                        "id": "FridgeTriggered",
-                        "data": 100
-                    }
-                ]
-            }]
+def log_to_csv(payload: KitchenSensorPayload):
+    if os.path.isfile(output_file):
+        # CSV exists, append to end of file
+        with open(output_file, 'a', encoding="utf-8", newline='') as sensor_file:
+            writer = csv.writer(sensor_file)
+            writer.writerow([payload.time,
+                             payload.received_time,
+                             payload.rssi,
+                             payload.snr,
+                             payload.data_rate_raw,
+                             payload.temperature,
+                             payload.humidity,
+                             payload.ldr,
+                             payload.sec_since_pir,
+                             payload.PIR_triggered_time,
+                             payload.sec_since_fridge,
+                             payload.fridge_opened_time])
 
-            print("Publishing payload to dashboard:", json.dumps(dashboard_json))
-            self.dashboard_broker.publish(topic='KitchenIoT', payload=json.dumps(dashboard_json))
-            print("Publishing pir trigger to dashboard:", json.dumps(pir_json))
-            self.dashboard_broker.publish(topic='KitchenIoT', payload=json.dumps(pir_json))
-            print("Publishing fridge trigger to dashboard:", json.dumps(fridge_json))
-            self.dashboard_broker.publish(topic='KitchenIoT', payload=json.dumps(fridge_json))
+    else:
+        # CSV does not exist. Write the headings
+        with open(output_file, 'w', encoding="utf-8", newline='') as sensor_file:
+            writer = csv.writer(sensor_file)
+            writer.writerow(['sent_time', 'received_time', 'rssi', 'snr', 'data_rate', 'temperature', 'humidity', 'ldr',
+                             'sec_since_pir', 'PIR_triggered_time', 'sec_since_fridge', 'fridge_opened_time'])
+            writer.writerow([payload.time,
+                             payload.received_time,
+                             payload.rssi,
+                             payload.snr,
+                             payload.data_rate_raw,
+                             payload.temperature,
+                             payload.humidity,
+                             payload.ldr,
+                             payload.sec_since_pir,
+                             payload.PIR_triggered_time,
+                             payload.sec_since_fridge,
+                             payload.fridge_opened_time])
+
+
+def replay_csv_to_mqtt():
+    # todo
+    pass

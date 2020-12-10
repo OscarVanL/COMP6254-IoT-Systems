@@ -3,7 +3,7 @@ import json
 import time
 import uuid
 import yaml
-import datetime
+from datetime import datetime, timedelta
 import os
 import csv
 from dateutil import parser
@@ -56,7 +56,7 @@ class Coursework:
 
     def on_message(self, client, userdata, message):
         print('----------------')
-        received_time = datetime.datetime.now()
+        received_time = datetime.now().astimezone()
         print('Message received at:', received_time)
         print('topic:', message.topic)
         print('message:', message.payload)
@@ -176,7 +176,7 @@ class KitchenSensorPayload:
             if 'sec_since_pir' in payload_fields:
                 print(str(sensor_payload.sec_since_pir) + " seconds since last PIR activity")
                 self.sec_since_pir = sensor_payload.sec_since_pir
-                self.PIR_triggered_time = self.time - datetime.timedelta(seconds=sensor_payload.sec_since_pir)
+                self.PIR_triggered_time = self.time - timedelta(seconds=sensor_payload.sec_since_pir)
                 print("So, the PIR was triggered at:", self.PIR_triggered_time)
             else:
                 self.PIR_triggered_time = None
@@ -184,7 +184,7 @@ class KitchenSensorPayload:
             if 'sec_since_fridge' in payload_fields:
                 print(str(sensor_payload.sec_since_fridge) + " seconds since the fridge was opened")
                 self.sec_since_fridge = sensor_payload.sec_since_fridge
-                self.fridge_opened_time = self.time - datetime.timedelta(seconds=sensor_payload.sec_since_fridge)
+                self.fridge_opened_time = self.time - timedelta(seconds=sensor_payload.sec_since_fridge)
                 print("So, the fridge was opened at:", self.fridge_opened_time)
             else:
                 self.fridge_opened_time = None

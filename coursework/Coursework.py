@@ -25,6 +25,7 @@ class Coursework:
                                               password=config['DASHBOARD_MQTT_PASS'])
         self.dashboard_broker.connect(host=config['DASHBOARD_MQTT_BROKER'], port=config['DASHBOARD_MQTT_PORT'])
         self.dashboard_broker.on_publish = self.on_publish
+        self.dashboard_broker.on_disconnect = self.on_disconnect_dash
 
         self.ttn_broker = Client(client_id=str(uuid.getnode()), clean_session=False)
         self.ttn_broker.username_pw_set(username=config['TTN_MQTT_USER'],
@@ -34,6 +35,7 @@ class Coursework:
         self.ttn_broker.on_subscribe = self.on_subscribe
         self.ttn_broker.on_connect = self.on_connect
         self.ttn_broker.on_message = self.on_message
+        self.ttn_broker.on_disconnect = self.on_disconnect_ttn
 
         # Start new threads for each broker
         self.ttn_broker.loop_start()
@@ -53,6 +55,14 @@ class Coursework:
 
     def on_publish(self, client, userdata, mid):
         print("Published")
+
+    def on_disconnect_dash(self, client, userdata, rc):
+        if rc != 0:
+            print("Dashboard MQTT connection lost. Will re-connect automatically")
+
+    def on_disconnect_ttn(self, client, userdata, rc):
+        if rc != 0:
+            print("TTN MQTT connection lost. Will re-conect automatically")
 
     def on_message(self, client, userdata, message):
         print('----------------')

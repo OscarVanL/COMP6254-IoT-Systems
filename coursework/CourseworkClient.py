@@ -83,6 +83,10 @@ class CourseworkClient:
     def relay_to_grafana(self, payload: KitchenData):
 
         interval = 120
+        # Round fridge opened and PIR triggered time to nearest minute
+        fridge_opened_rounded = int(payload.fridge_opened_time.timestamp()//60 * 60)
+        pir_triggered_rounded = int(payload.PIR_triggered_time.timestamp()//60 * 60)
+
         graphite_data = [
             {
                 "name": "kitcheniot.meta.rssi",
@@ -110,7 +114,7 @@ class CourseworkClient:
             },
             {
                 "name": "kitcheniot.activity.fridge",
-                "value": int(payload.fridge_opened_time.timestamp()),
+                "value": fridge_opened_rounded,  # Round opened time down to nearest minute
                 "interval": interval,
                 "unit": "",
                 "time": int(payload.time.timestamp()),
@@ -118,7 +122,7 @@ class CourseworkClient:
             },
             {
                 "name": "kitcheniot.activity.pir",
-                "value": int(payload.PIR_triggered_time.timestamp()),
+                "value": pir_triggered_rounded,
                 "interval": interval,
                 "unit": "",
                 "time": int(payload.time.timestamp()),
@@ -202,6 +206,6 @@ def replay_csv(client: CourseworkClient):
         for row in reader:
             parsed = KitchenSensorParser.parse_csv_row(row)
             client.relay_to_grafana(parsed)
-            time.sleep(0.5)
+            time.sleep(0.1)  # Leave a small delay so we don't spam Graphite
 
 

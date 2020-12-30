@@ -30,6 +30,8 @@ class CourseworkClient:
         self.ttn_broker.on_connect = self.on_connect
         self.ttn_broker.on_message = self.on_message
         self.ttn_broker.on_disconnect = self.on_disconnect
+        self.last_PIR_triggered = None
+        self.last_fridge_opened = None
 
         # Uncomment to replay saved CSV messages to Graphite
         #replay_csv(self)
@@ -87,6 +89,8 @@ class CourseworkClient:
         fridge_opened_rounded = int(payload.fridge_opened_time.timestamp()//60 * 60)
         pir_triggered_rounded = int(payload.PIR_triggered_time.timestamp()//60 * 60)
 
+
+
         graphite_data = [
             {
                 "name": "kitcheniot.meta.rssi",
@@ -113,22 +117,6 @@ class CourseworkClient:
                 "mtype": "gauge",
             },
             {
-                "name": "kitcheniot.activity.fridge",
-                "value": fridge_opened_rounded,  # Round opened time down to nearest minute
-                "interval": interval,
-                "unit": "",
-                "time": int(payload.time.timestamp()),
-                "mtype": "timestamp",
-            },
-            {
-                "name": "kitcheniot.activity.pir",
-                "value": pir_triggered_rounded,
-                "interval": interval,
-                "unit": "",
-                "time": int(payload.time.timestamp()),
-                "mtype": "timestamp",
-            },
-            {
                 "name": "kitcheniot.sensor.temperature",
                 "value": payload.temperature,
                 "interval": interval,
@@ -153,6 +141,30 @@ class CourseworkClient:
                 "mtype": "gauge",
             }
         ]
+
+        # Don't send duplicate timestamps
+        if fridge_opened_rounded != self.last_fridge_opened:
+            self.last_fridge_opened = fridge_opened_rounded
+            graphite_data.append({
+                "name": "kitcheniot.activity.fridge",
+                "value": 1,
+                "interval": interval,
+                "unit": "",
+                "time": fridge_opened_rounded,
+                "mtype": "gauge",
+            })
+
+        if pir_triggered_rounded != self.last_PIR_triggered:
+            self.last_PIR_triggered = pir_triggered_rounded
+            graphite_data.append({
+                "name": "kitcheniot.activity.pir",
+                "value": 1,
+                "interval": interval,
+                "unit": "",
+                "time": pir_triggered_rounded,
+                "mtype": "gauge",
+            })
+
 
         print("graphite data: ", graphite_data)
 

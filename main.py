@@ -1,16 +1,16 @@
 import click
 from labs import Lab2
-from coursework import Coursework
+from coursework import CourseworkClient
 
 
 @click.command()
-@click.option("--coursework", is_flag=True, help="Launch the Coursework MQTT code")
+@click.option("--coursework", is_flag=True, help="Launch the CourseworkClient MQTT code")
 @click.option("--lab", required=False, type=int, help="Which lab's MQTT code to run [2]")
 def start_IoT_lab(coursework, lab):
 
     if coursework:
-        print("Launching Coursework")
-        Coursework.Coursework()
+        print("Launching CourseworkClient")
+        CourseworkClient.CourseworkClient()
 
     if lab == 2:
         print("Launching Lab 2")

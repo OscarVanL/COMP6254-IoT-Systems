@@ -130,3 +130,9 @@ dmypy.json
 
 # PyCharm
 .idea/
+
+# Secrets file
+coursework/CW_Mqtt_Secrets.yaml
+
+# CSV files
+*.csv

@@ -4,3 +4,4 @@ dnspython3
 python-dateutil
 pyYAML==5.3.1
 protobuf==3.14.0
+requests==2.25.1

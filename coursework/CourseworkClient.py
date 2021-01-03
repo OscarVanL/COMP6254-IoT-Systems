@@ -108,6 +108,14 @@ class CourseworkClient:
                 "mtype": "gauge",
             },
             {
+                "name": "kitcheniot.meta.payload_size",
+                "value": int(payload.payload_size),
+                "interval": interval,
+                "unit": "b",
+                "time": int(payload.time.timestamp()),
+                "mtype": "gauge"
+            },
+            {
                 "name": "kitcheniot.sensor.temperature",
                 "value": payload.temperature,
                 "interval": interval,
@@ -213,13 +221,14 @@ def log_to_csv(payload: KitchenData):
                              payload.sec_since_pir,
                              payload.PIR_triggered_time,
                              payload.sec_since_fridge,
-                             payload.fridge_opened_time])
+                             payload.fridge_opened_time,
+                             payload.payload_size])
     else:
         # CSV does not exist. Write the headings
         with open(csv_file, 'w', encoding="utf-8", newline='') as sensor_file:
             writer = csv.writer(sensor_file)
             writer.writerow(['sent_time', 'received_time', 'rssi', 'snr', 'data_rate', 'temperature', 'humidity', 'ldr',
-                             'sec_since_pir', 'PIR_triggered_time', 'sec_since_fridge', 'fridge_opened_time'])
+                             'sec_since_pir', 'PIR_triggered_time', 'sec_since_fridge', 'fridge_opened_time', 'payload_size'])
             writer.writerow([payload.time,
                              payload.received_time,
                              payload.rssi,
@@ -231,7 +240,8 @@ def log_to_csv(payload: KitchenData):
                              payload.sec_since_pir,
                              payload.PIR_triggered_time,
                              payload.sec_since_fridge,
-                             payload.fridge_opened_time])
+                             payload.fridge_opened_time,
+                             payload.payload_size])
 
 
 def replay_csv(client: CourseworkClient):

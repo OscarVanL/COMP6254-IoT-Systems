@@ -21,6 +21,7 @@ class KitchenData:
     PIR_triggered_time: datetime
     sec_since_fridge: int
     fridge_opened_time: datetime
+    payload_size: int
 
 
 class KitchenSensorParser:
@@ -40,7 +41,12 @@ class KitchenSensorParser:
         PIR_triggered_time = parser.parse(row[9])
         sec_since_fridge = int(row[10])
         fridge_opened_time = parser.parse(row[11])
-        return KitchenData(time, received_time, rssi, snr, data_rate_raw, data_rate, temperature, humidity, ldr, sec_since_pir, PIR_triggered_time, sec_since_fridge, fridge_opened_time)
+        # When I first started collecting data, I did not store the payload size metadata
+        try:
+            payload_size = row[12]
+        except IndexError:
+            payload_size = 0
+        return KitchenData(time, received_time, rssi, snr, data_rate_raw, data_rate, temperature, humidity, ldr, sec_since_pir, PIR_triggered_time, sec_since_fridge, fridge_opened_time, payload_size)
 
     @staticmethod
     def parse_message(message, received_time):
@@ -56,6 +62,7 @@ class KitchenSensorParser:
         if payload_dict['port'] == 3:
             # Decode protocol buffer payload
             payload_hex = base64.b64decode(payload_dict['payload_raw'])
+            payload_size = len(payload_hex)
             sensor_payload = SensorPayload_pb2.SensorPayload()
             sensor_payload.ParseFromString(payload_hex)
 
@@ -86,4 +93,4 @@ class KitchenSensorParser:
         else:
             raise ValueError("KitchenSensorParser initialised with incorrect payload type (expected port: 3)")
 
-        return KitchenData(time, received_time, rssi, snr, data_rate_raw, data_rate, temperature, humidity, ldr, sec_since_pir, PIR_triggered_time, sec_since_fridge, fridge_opened_time)
+        return KitchenData(time, received_time, rssi, snr, data_rate_raw, data_rate, temperature, humidity, ldr, sec_since_pir, PIR_triggered_time, sec_since_fridge, fridge_opened_time, payload_size)
